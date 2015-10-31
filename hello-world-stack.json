@@ -227,24 +227,12 @@
                   " ",
                   "respawn",
                   " ",
-                  "exec /usr/bin/ruby /srv/start.rb"
+                  "exec /usr/bin/ruby2.0 /srv/start.rb"
                 ]]}
               }
             },
             "commands": {
-              "a_set_ruby": {
-                "command": "alternatives --set ruby /usr/bin/ruby2.0"
-              },
-              "b_set_gem": {
-                "command": "alternatives --set ruby /usr/bin/gem2.0"
-              },
-              "c_update": {
-                "command": "gem update --no-ri --no-rdoc"
-              },
-              "d_install_bundler": {
-                "command": "gem install bundler --no-ri --no-rdoc"
-              },
-              "e_run_app": {
+              "a_run_app": {
                 "command": "service hello-world start"
               }
             }
