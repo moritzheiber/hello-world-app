@@ -62,6 +62,11 @@ task :dump do
     puts JSON.pretty_generate(JSON(Stacker.template_body(TEMPLATE)))
 end
 
+desc 'runs tests'
+task :test do
+  puts "There are no tests yet :("
+end
+
 task :default do
   puts
   puts 'Use one of the available tasks:'
