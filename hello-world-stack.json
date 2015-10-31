@@ -1,0 +1,274 @@
+// AutoStacker24 CloudFormation Template (https://github.com/AutoScout24/autostacker24/blob/master/readme.md)
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+  "Description" : "Hello world application",
+
+  "Parameters" : {
+    "AmiId" : {
+      "Description" : "Id of AMI to use for deployment",
+      "Type" : "String"
+    },
+    "Service": {
+      "Description": "Name of the service.",
+      "Type": "String"
+    },
+    "Version" : {
+      "Description" : "Version of the service to launch.",
+      "Type" : "String"
+    }
+  },
+  "Resources" : {
+    "VPC" : {
+      "Type" : "AWS::EC2::VPC",
+      "Properties" : {
+        "EnableDnsSupport" : "true",
+        "EnableDnsHostnames" : "true",
+        "CidrBlock" : "10.0.0.0/16",
+        "Tags" : [
+          { "Key" : "Name", "Value" : "@AWS::StackName" }
+        ]
+      }
+    },
+    "SubnetA" : {
+      "Type" : "AWS::EC2::Subnet",
+      "DependsOn": "VPC",
+      "Properties" : {
+        "VpcId" : "@VPC",
+        "MapPublicIpOnLaunch" : "true",
+        "CidrBlock" : "10.0.10.0/24",
+        "AvailabilityZone" : "eu-central-1a",
+        "Tags" : [
+          { "Key" : "Name", "Value" : "SubnetA" },
+          { "Key" : "Sandbox", "Value" : "@AWS::StackName" }
+        ]
+      }
+    },
+    "SubnetB" : {
+      "Type" : "AWS::EC2::Subnet",
+      "DependsOn": "VPC",
+      "Properties" : {
+        "VpcId" : "@VPC",
+        "MapPublicIpOnLaunch" : "true",
+        "CidrBlock" : "10.0.20.0/24",
+        "AvailabilityZone" : "eu-central-1b",
+        "Tags" : [
+          { "Key" : "Name", "Value" : "SubnetB" },
+          { "Key" : "Sandbox", "Value" : "@AWS::StackName" }
+        ]
+      }
+    },
+    "InternetGateway" : {
+      "Type" : "AWS::EC2::InternetGateway",
+      "DependsOn": "VPC",
+      "Properties" : {
+        "Tags" : [
+          { "Key" : "Name", "Value" : "Gateway" },
+          { "Key" : "Sandbox", "Value" : "@AWS::StackName" }
+        ]
+      }
+    },
+    "GatewayToInternet" : {
+       "Type" : "AWS::EC2::VPCGatewayAttachment",
+       "DependsOn": "InternetGateway",
+       "Properties" : {
+         "VpcId" : "@VPC",
+         "InternetGatewayId" : "@InternetGateway"
+       }
+    },
+    "PublicRouteTable" : {
+      "Type" : "AWS::EC2::RouteTable",
+      "DependsOn": "VPC",
+      "Properties" : {
+        "VpcId" : "@VPC",
+        "Tags" : [
+          { "Key" : "Name", "Value" : "PublicRouteTable" },
+          { "Key" : "Sandbox", "Value" : "@AWS::StackName" }
+        ]
+      }
+    },
+    "PublicRoute" : {
+      "Type" : "AWS::EC2::Route",
+      "DependsOn" : ["GatewayToInternet", "PublicRouteTable"],
+      "Properties" : {
+        "RouteTableId" : "@PublicRouteTable",
+        "DestinationCidrBlock" : "0.0.0.0/0",
+        "GatewayId" : "@InternetGateway"
+      }
+    },
+    "SubnetARouteTableAssociation" : {
+      "Type" : "AWS::EC2::SubnetRouteTableAssociation",
+      "DependsOn": "SubnetA",
+      "Properties" : {
+        "SubnetId" : "@SubnetA",
+        "RouteTableId" : "@PublicRouteTable"
+      }
+    },
+    "SubnetBRouteTableAssociation" : {
+      "Type" : "AWS::EC2::SubnetRouteTableAssociation",
+      "DependsOn": "SubnetB",
+      "Properties" : {
+        "SubnetId" : "@SubnetB",
+        "RouteTableId" : "@PublicRouteTable"
+      }
+    },
+    "ServiceSecurityGroup" : {
+      "Type" : "AWS::EC2::SecurityGroup",
+      "DependsOn": ["VPC", "LoadBalancerSecurityGroup"],
+      "Properties" : {
+        "GroupDescription" : "Enable access to port 8000 for hello world",
+        "VpcId" : "@VPC",
+        "SecurityGroupIngress" : [
+          {
+            "IpProtocol" : "tcp",
+            "FromPort" : "8000",
+            "ToPort" : "8000",
+            "SourceSecurityGroupId" : "@LoadBalancerSecurityGroup"
+          },
+          {
+            "IpProtocol" : "tcp",
+            "FromPort" : "22",
+            "ToPort" : "22",
+            "CidrIp" : "0.0.0.0/0"
+          }
+        ],
+        "Tags" : [
+          { "Key" : "Name", "Value" : "ServiceSecurityGroup" },
+          { "Key" : "Sandbox", "Value" : "@AWS::StackName" }
+        ]
+      }
+    },
+    "LoadBalancerSecurityGroup" : {
+      "Type" : "AWS::EC2::SecurityGroup",
+      "DependsOn": "VPC",
+      "Properties" : {
+        "GroupDescription" : "Proxy requests to the hello world service",
+        "VpcId" : "@VPC",
+        "SecurityGroupIngress" : [
+          {
+            "IpProtocol" : "tcp",
+            "FromPort" : "80",
+            "ToPort" : "80",
+            "CidrIp" : "0.0.0.0/0"
+          }
+        ],
+        "Tags" : [
+          { "Key" : "Name", "Value" : "LoadBalancerSecurityGroup" },
+          { "Key" : "Sandbox", "Value" : "@AWS::StackName" }
+        ]
+      }
+    },
+    "AutoScalingGroup" : {
+      "Type" : "AWS::AutoScaling::AutoScalingGroup",
+      "DependsOn": [
+        "SubnetA",
+        "SubnetB",
+        "Loadbalancer"
+      ],
+      "Properties" : {
+        "AvailabilityZones" : [
+          "eu-central-1a",
+          "eu-central-1b"
+        ],
+        "VPCZoneIdentifier" : ["@SubnetA", "@SubnetB"],
+        "LaunchConfigurationName" : "@LaunchConfig",
+        "DesiredCapacity": "1",
+        "MinSize": "1",
+        "MaxSize": "2",
+        "HealthCheckGracePeriod" : "300",
+        "HealthCheckType" : "ELB",
+        "LoadBalancerNames" : ["@Loadbalancer"],
+        "Tags" : [
+          {"Key": "Name", "Value": "@Service", "PropagateAtLaunch": "true" },
+          {"Key": "Environment", "Value": "@AWS::StackName", "PropagateAtLaunch": "true" },
+          {"Key": "Version", "Value": "@Version", "PropagateAtLaunch": "true" }
+        ]
+      },
+      "UpdatePolicy": {
+        "AutoScalingRollingUpdate": {
+          "MinInstancesInService": "1",
+          "MaxBatchSize": "1",
+          "PauseTime" : "PT10M",
+          "WaitOnResourceSignals": "true"
+        }
+      }
+    },
+    "LaunchConfig" : {
+      "Type" : "AWS::AutoScaling::LaunchConfiguration",
+      "Metadata": {
+        "AWS::CloudFormation::Authentication": {
+          "S3AccessCreds" : {
+            "type": "s3",
+            "buckets": [ "mheiber-hello-world" ],
+            "roleName": "@Service"
+          }
+        },
+        "AWS::CloudFormation::Init" : {
+          "configSets" : {
+            "hello-world-setup": ["hello-world"]
+          },
+          "hello-world": {
+          }
+        }
+      },
+      "Properties" : {
+        "ImageId" : "@AmiId",
+        "InstanceType" : "t2.micro",
+        "SecurityGroups" : ["@ServiceSecurityGroup"],
+        "IamInstanceProfile" : "@Service",
+        "UserData" : { "Fn::Base64" : { "Fn::Join" : ["", [
+          "#!/bin/bash\n",
+          "set +x\n",
+          "\n",
+
+          "VERSION=@Version\n",
+
+          "/opt/aws/bin/cfn-init -v ",
+          "--stack @AWS::StackName ",
+          "--resource LaunchConfig ",
+          "--configsets hello-world-setup ",
+          "--region @AWS::Region\n",
+
+          "/opt/aws/bin/cfn-signal -e $? ",
+          " --stack @AWS::StackName",
+          " --region @AWS::Region",
+          " --resource AutoScalingGroup\n"
+        ]]}}
+      }
+    },
+    "Loadbalancer" : {
+      "Type": "AWS::ElasticLoadBalancing::LoadBalancer",
+      "Properties": {
+        "CrossZone" : "false",
+        "HealthCheck" : {
+          "Target" : "HTTP:8000/",
+          "HealthyThreshold" : "2",
+          "UnhealthyThreshold" : "3",
+          "Interval" : "10",
+          "Timeout" : "5"
+        },
+        "LoadBalancerName" : "@AWS::StackName",
+        "Listeners" : [{
+          "InstancePort" : "8000",
+          "InstanceProtocol" : "HTTP",
+          "LoadBalancerPort" : "80",
+          "Protocol" : "HTTP"
+        }],
+        "SecurityGroups" : ["@LoadBalancerSecurityGroup"],
+        "Subnets" : ["@SubnetA", "@SubnetB"],
+        "Tags" : [{"Key": "Environment", "Value": "@AWS::StackName" }]
+      }
+    },
+    "DomainRecord": {
+      "Type" : "AWS::Route53::RecordSet",
+      "Properties" : {
+        "Type" : "A",
+        "HostedZoneName" : "aws.heiber.im.",
+        "Name" : "@AWS::StackName.aws.heiber.im",
+        "AliasTarget" : {
+          "HostedZoneId" : { "Fn::GetAtt" : [ "Loadbalancer", "CanonicalHostedZoneNameID" ] },
+          "DNSName" : { "Fn::GetAtt" : [ "Loadbalancer", "CanonicalHostedZoneName" ] }
+        }
+      }
+    }
+  }
+}
