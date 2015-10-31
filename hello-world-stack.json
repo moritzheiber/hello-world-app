@@ -227,6 +227,9 @@
                   " ",
                   "respawn",
                   " ",
+                  "chdir /srv",
+                  "setuid nobody",
+                  " ",
                   "exec /usr/bin/ruby2.0 /srv/start.rb"
                 ]]}
               }
