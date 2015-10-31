@@ -1,5 +1,7 @@
 # Hello world! service
 
+[![Build Status](https://snap-ci.com/moritzheiber/hello-world-app/branch/master/build_image)](https://snap-ci.com/moritzheiber/hello-world-app/branch/master)
+
 This is a small "Hello world!" service displaying a website which says "Hello world!" after start it using
 
     ruby start.rb
