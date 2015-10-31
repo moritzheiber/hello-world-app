@@ -198,7 +198,7 @@
         "AWS::CloudFormation::Authentication": {
           "S3AccessCreds" : {
             "type": "s3",
-            "buckets": [ "mheiber-hello-world" ],
+            "buckets": [ "hello-world-app" ],
             "roleName": "@Service"
           }
         },
@@ -207,12 +207,35 @@
             "hello-world-setup": ["hello-world"]
           },
           "hello-world": {
+            "files": {
+              "/srv/index.html": {
+                "source": "https://s3-@AWS::Region.amazonaws.com/hello-world-app/@Service/@Version/index.html"
+              },
+              "/srv/start.rb": {
+                "source": "https://s3-@AWS::Region.amazonaws.com/hello-world-app/@Service/@Version/start.rb"
+              },
+              "/etc/init/hello-world.conf": {
+                "content": { "Fn::Join" : ["\n", [
+                  "description \"Hello world service\"",
+                  " ",
+                  "respawn",
+                  " ",
+                  "exec ruby /srv/start.rb"
+                ]]}
+              }
+            },
+            "commands": {
+              "run_app": {
+                "command": "service hello-world start"
+              }
+            }
           }
         }
       },
       "Properties" : {
         "ImageId" : "@AmiId",
         "InstanceType" : "t2.micro",
+        "KeyName": "mheiber RSA",
         "SecurityGroups" : ["@ServiceSecurityGroup"],
         "IamInstanceProfile" : "@Service",
         "UserData" : { "Fn::Base64" : { "Fn::Join" : ["", [

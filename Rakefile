@@ -1,10 +1,11 @@
 require 'bundler/setup'
 require 'autostacker24'
 
-SERVICE  = 'hello-world'
-VERSION  = ENV['VERSION'] || ENV['SNAP_PIPELINE_COUNTER']
-SANDBOX  = ENV['SANDBOX'] || ENV['SNAP_STAGE_NAME'].nil? && `whoami`.strip
-STACK    = SANDBOX ? "#{SANDBOX}-#{SERVICE}" : SERVICE
+REGION = ENV['AWS_REGION'] || 'eu-central-1'
+SERVICE = 'hello-world'
+VERSION = ENV['VERSION'] || ENV['SNAP_PIPELINE_COUNTER']
+SANDBOX = ENV['SANDBOX'] || ENV['SNAP_STAGE_NAME'].nil? && `whoami`.strip
+STACK = SANDBOX ? "#{SANDBOX}-#{SERVICE}" : SERVICE
 TEMPLATE = File.read("#{SERVICE}-stack.json")
 
 desc 'create or update stack'
@@ -19,6 +20,31 @@ end
 
 desc 'deploy the app'
 task :deploy => [:create_or_update] do
+end
+
+desc 'publish artifacts to S3'
+task :publish do
+
+  bucket = 'hello-world-app'
+
+  artifacts = [
+    'index.html',
+    'start.rb'
+  ]
+
+  s3 = Aws::S3::Client.new(region:REGION)
+
+  artifacts.each do |artifact|
+    artifact_path = "#{SERVICE}/#{VERSION}/#{File.basename artifact}"
+    puts "Uploading #{artifact} to S3 to #{artifact_path}"
+
+    result = s3.put_object(
+      bucket: bucket,
+      key: artifact_path,
+      body: IO.read("#{artifact}")
+    )
+    puts result.inspect
+  end
 end
 
 desc 'delete stack'
