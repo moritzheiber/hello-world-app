@@ -2,7 +2,7 @@
 
 [![Build Status](https://snap-ci.com/moritzheiber/hello-world-app/branch/master/build_image)](https://snap-ci.com/moritzheiber/hello-world-app/branch/master)
 
-This is a small "Hello world!" service displaying a website which displays a friendly message in port `8000` after you start it using
+This is a small "Hello world!" service supplying a website which greets you with a friendly message at port `8000` after you start it with:
 
     ruby start.rb
 
@@ -51,7 +51,7 @@ this will open port 8000 and display a web page saying "Hello world!".
 
 # Deploying on AWS
 
-There is a `Rakefile` which is using [Autostacker24](https://github.com/AutoScout24/autostacker24) to deploy this app to CloudFormation on AWS. There are a few rake commands which you can use:
+There is a `Rakefile` which is using [Autostacker24](https://github.com/AutoScout24/autostacker24) to deploy this app using CloudFormation to EC2 on AWS. There are a few rake commands which you can use:
 
     $ bundle exec rake -T
     rake create_or_update  # create or update stack
