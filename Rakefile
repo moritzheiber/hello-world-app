@@ -2,7 +2,7 @@ require 'bundler/setup'
 require 'autostacker24'
 
 REGION = ENV['AWS_REGION'] || 'eu-central-1'
-SERVICE = 'hello-world'
+SERVICE = 'hello-world'.freeze
 VERSION = ENV['VERSION'] || ENV['SNAP_PIPELINE_COUNTER']
 SANDBOX = ENV['SANDBOX'] || ENV['SNAP_STAGE_NAME'].nil? && `whoami`.strip
 STACK = SANDBOX ? "#{SANDBOX}-#{SERVICE}" : SERVICE
@@ -19,12 +19,11 @@ task :create_or_update do
 end
 
 desc 'deploy the app'
-task :deploy => [:create_or_update] do
+task deploy: [:create_or_update] do
 end
 
 desc 'publish artifacts to S3'
 task :publish do
-
   bucket = 'hello-world-app'
 
   artifacts = [
@@ -32,7 +31,7 @@ task :publish do
     'start.rb'
   ]
 
-  s3 = Aws::S3::Client.new(region:REGION)
+  s3 = Aws::S3::Client.new(region: REGION)
 
   artifacts.each do |artifact|
     artifact_path = "#{SERVICE}/#{VERSION}/#{File.basename artifact}"
@@ -41,7 +40,7 @@ task :publish do
     result = s3.put_object(
       bucket: bucket,
       key: artifact_path,
-      body: IO.read("#{artifact}")
+      body: IO.read(artifact.to_s)
     )
     puts result.inspect
   end
@@ -59,12 +58,12 @@ end
 
 desc 'dump template'
 task :dump do
-    puts JSON.pretty_generate(JSON(Stacker.template_body(TEMPLATE)))
+  puts JSON.pretty_generate(JSON(Stacker.template_body(TEMPLATE)))
 end
 
 desc 'runs tests'
 task :test do
-  puts "There are no tests yet :("
+  puts 'There are no tests yet :('
 end
 
 task :default do
