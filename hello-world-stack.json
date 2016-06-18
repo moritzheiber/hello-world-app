@@ -216,10 +216,10 @@
             },
             "files": {
               "/srv/index.html": {
-                "source": "https://s3-@AWS::Region.amazonaws.com/hello-world-app/@Service/@Version/index.html"
+                "source": "https://s3-@{AWS::Region}.amazonaws.com/hello-world-app/@Service/@Version/index.html"
               },
               "/srv/start.rb": {
-                "source": "https://s3-@AWS::Region.amazonaws.com/hello-world-app/@Service/@Version/start.rb"
+                "source": "https://s3-@{AWS::Region}.amazonaws.com/hello-world-app/@Service/@Version/start.rb"
               },
               "/etc/init/hello-world.conf": {
                 "content": { "Fn::Join" : ["\n", [
