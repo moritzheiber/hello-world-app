@@ -1,14 +1,17 @@
 GEM
   remote: https://rubygems.org/
   specs:
-    autostacker24 (1.0.53)
+    autostacker24 (2.0.1)
       aws-sdk-core (~> 2)
       json (~> 1.8)
-    aws-sdk-core (2.1.33)
+      json_pure (~> 1.8)
+    aws-sdk-core (2.3.14)
       jmespath (~> 1.0)
-    jmespath (1.1.3)
+    jmespath (1.2.4)
+      json_pure (>= 1.8.1)
     json (1.8.3)
-    rake (10.4.2)
+    json_pure (1.8.3)
+    rake (11.2.2)
 
 PLATFORMS
   ruby
@@ -19,4 +22,4 @@ DEPENDENCIES
   rake
 
 BUNDLED WITH
-   1.10.6
+   1.12.3
