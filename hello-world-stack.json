@@ -302,7 +302,7 @@
       "Properties" : {
         "Type" : "A",
         "HostedZoneName" : "aws.heiber.im.",
-        "Name" : "@AWS::StackName.aws.heiber.im",
+        "Name" : "@{AWS::StackName}.aws.heiber.im",
         "AliasTarget" : {
           "HostedZoneId" : { "Fn::GetAtt" : [ "Loadbalancer", "CanonicalHostedZoneNameID" ] },
           "DNSName" : { "Fn::GetAtt" : [ "Loadbalancer", "CanonicalHostedZoneName" ] }
